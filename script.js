@@ -1,4 +1,4 @@
-// ==================== SHINIGAMI ESSE - FULLY FIXED ====================
+// ==================== SHINIGAMI ESSE - PARANOIA MENU ====================
 (function () {
     // State
     let currentCategories = [];
@@ -97,6 +97,60 @@
         });
     }
 
+    // Render a single item's right side based on type
+    function renderItemRight(item) {
+        const rightDiv = document.createElement('div');
+        rightDiv.className = "item-right";
+
+        if (item.type === 'button') {
+            const arrowSpan = document.createElement('span');
+            arrowSpan.className = 'indicator-arrow';
+            arrowSpan.innerText = '▶';
+            rightDiv.appendChild(arrowSpan);
+        }
+        else if (item.type === 'checkbox') {
+            const isChecked = !!item.checked;
+            const dotSpan = document.createElement('span');
+            dotSpan.className = 'toggle-dot';
+            dotSpan.style.backgroundColor = isChecked ? '#10b981' : '#ef4444';
+            dotSpan.style.boxShadow = isChecked ? '0 0 6px #10b981' : '0 0 3px #ef4444';
+            const textSpan = document.createElement('span');
+            textSpan.className = 'toggle-text';
+            textSpan.style.color = isChecked ? '#86efac' : '#f87171';
+            textSpan.innerText = isChecked ? 'ON' : 'OFF';
+            rightDiv.appendChild(dotSpan);
+            rightDiv.appendChild(textSpan);
+        }
+        else if (item.type === 'scrollable') {
+            const valuesArr = item.values || ['Value 1', 'Value 2', 'Value 3'];
+            let currentValIdx = (item.value !== undefined && item.value >= 0 && item.value < valuesArr.length) ? item.value : 0;
+            const displayVal = valuesArr[currentValIdx] || '???';
+            const badgeSpan = document.createElement('span');
+            badgeSpan.className = 'scrollable-badge';
+            badgeSpan.innerHTML = `◀ ${displayVal} ▶`;
+            rightDiv.appendChild(badgeSpan);
+        }
+        else if (item.type === 'slider') {
+            let sliderVal = (item.value !== undefined) ? item.value : (item.min || 0);
+            const badgeSpan = document.createElement('span');
+            badgeSpan.className = 'slider-badge';
+            badgeSpan.innerText = `${sliderVal}`;
+            rightDiv.appendChild(badgeSpan);
+        }
+        else if (item.type === 'divider') {
+            // Dividers have no right indicator
+            return null;
+        }
+        else {
+            const fallbackSpan = document.createElement('span');
+            fallbackSpan.className = 'indicator-arrow';
+            fallbackSpan.innerText = '›';
+            rightDiv.appendChild(fallbackSpan);
+        }
+
+        return rightDiv;
+    }
+
     // Render menu items
     function renderMenuItems() {
         if (!menuListEl) return;
@@ -118,6 +172,15 @@
         if (selectedIndex < 0 && currentMenuItems.length) selectedIndex = 0;
 
         currentMenuItems.forEach((item, idx) => {
+            // Handle dividers specially
+            if (item.type === 'divider') {
+                const divider = document.createElement('li');
+                divider.className = "menu-divider";
+                divider.innerText = item.label || "──────────";
+                menuListEl.appendChild(divider);
+                return;
+            }
+
             const li = document.createElement('li');
             li.className = `menu-item ${idx === selectedIndex ? 'active' : ''}`;
 
@@ -125,54 +188,14 @@
             const leftSpan = document.createElement('span');
             leftSpan.innerText = item.label;
 
-            // Right side based on type
-            const rightDiv = document.createElement('div');
-            rightDiv.className = "item-right";
-
-            if (item.type === 'button') {
-                const arrowSpan = document.createElement('span');
-                arrowSpan.className = 'indicator-arrow';
-                arrowSpan.innerText = '›';
-                rightDiv.appendChild(arrowSpan);
+            // Right side
+            const rightDiv = renderItemRight(item);
+            if (rightDiv) {
+                li.appendChild(leftSpan);
+                li.appendChild(rightDiv);
+            } else {
+                li.appendChild(leftSpan);
             }
-            else if (item.type === 'checkbox') {
-                const isChecked = !!item.checked;
-                const dotSpan = document.createElement('span');
-                dotSpan.className = 'toggle-dot';
-                dotSpan.style.backgroundColor = isChecked ? '#10b981' : '#ef4444';
-                dotSpan.style.boxShadow = isChecked ? '0 0 6px #10b981' : '0 0 3px #ef4444';
-                const textSpan = document.createElement('span');
-                textSpan.className = 'toggle-text';
-                textSpan.style.color = isChecked ? '#86efac' : '#f87171';
-                textSpan.innerText = isChecked ? 'ON' : 'OFF';
-                rightDiv.appendChild(dotSpan);
-                rightDiv.appendChild(textSpan);
-            }
-            else if (item.type === 'scrollable') {
-                const valuesArr = item.values || ['Value 1', 'Value 2', 'Value 3'];
-                let currentValIdx = (item.value !== undefined && item.value >= 0 && item.value < valuesArr.length) ? item.value : 0;
-                const displayVal = valuesArr[currentValIdx] || '???';
-                const badgeSpan = document.createElement('span');
-                badgeSpan.className = 'scrollable-badge';
-                badgeSpan.innerHTML = `◀ ${displayVal} ▶`;
-                rightDiv.appendChild(badgeSpan);
-            }
-            else if (item.type === 'slider') {
-                let sliderVal = (item.value !== undefined) ? item.value : (item.min || 0);
-                const badgeSpan = document.createElement('span');
-                badgeSpan.className = 'slider-badge';
-                badgeSpan.innerText = `${sliderVal}`;
-                rightDiv.appendChild(badgeSpan);
-            }
-            else {
-                const fallbackSpan = document.createElement('span');
-                fallbackSpan.className = 'indicator-arrow';
-                fallbackSpan.innerText = '›';
-                rightDiv.appendChild(fallbackSpan);
-            }
-
-            li.appendChild(leftSpan);
-            li.appendChild(rightDiv);
 
             // Hover selection
             li.addEventListener('mouseenter', () => {
@@ -210,7 +233,7 @@
     function executeCurrentAction() {
         if (!currentMenuItems.length) return;
         const item = currentMenuItems[selectedIndex];
-        if (!item) return;
+        if (!item || item.type === 'divider') return;
 
         if (item.type === 'checkbox') {
             item.checked = !item.checked;
@@ -257,6 +280,11 @@
         if (!currentMenuItems.length) return;
         let newIdx = selectedIndex - 1;
         if (newIdx < 0) newIdx = currentMenuItems.length - 1;
+        // Skip dividers if possible
+        while (newIdx >= 0 && newIdx < currentMenuItems.length && currentMenuItems[newIdx] && currentMenuItems[newIdx].type === 'divider') {
+            newIdx = newIdx - 1;
+            if (newIdx < 0) newIdx = currentMenuItems.length - 1;
+        }
         if (newIdx !== selectedIndex) {
             selectedIndex = newIdx;
             renderMenuItems();
@@ -267,6 +295,11 @@
         if (!currentMenuItems.length) return;
         let newIdx = selectedIndex + 1;
         if (newIdx >= currentMenuItems.length) newIdx = 0;
+        // Skip dividers if possible
+        while (newIdx >= 0 && newIdx < currentMenuItems.length && currentMenuItems[newIdx] && currentMenuItems[newIdx].type === 'divider') {
+            newIdx = newIdx + 1;
+            if (newIdx >= currentMenuItems.length) newIdx = 0;
+        }
         if (newIdx !== selectedIndex) {
             selectedIndex = newIdx;
             renderMenuItems();
@@ -312,7 +345,7 @@
         const data = event.data;
         if (!data) return;
 
-        // Show/Hide UI
+        // Show/Hide UI (compatible with your Lua's showUI action)
         if (data.type === 'ui' || data.action === 'showUI') {
             const visible = (data.type === 'ui') ? data.status : data.visible;
             if (visible === true) {
@@ -337,6 +370,7 @@
             if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
             if (data.selectedIndex !== undefined) selectedIndex = data.selectedIndex;
             if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+            if (data.path) console.log("Menu path:", data.path);
             if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
             fullRender();
         }
@@ -348,41 +382,31 @@
                 renderMenuItems();
             }
         }
+
+        // Keydown (for initial selection sync)
+        if (data.action === 'keydown') {
+            if (data.index !== undefined && currentMenuItems.length && data.index < currentMenuItems.length) {
+                selectedIndex = data.index;
+                renderMenuItems();
+            }
+        }
+
+        // Update Auth Footer
+        if (data.action === 'updateAuthFooter') {
+            if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+        }
+
+        // Execute JavaScript (for menu positioning, etc.)
+        if (data.action === 'executeJS' && data.code) {
+            try {
+                eval(data.code);
+            } catch (e) { console.log("ExecuteJS error:", e); }
+        }
     });
 
     // Attach keyboard listener
     window.addEventListener('keydown', onKeyDown);
 
-    // DEMO MODE for local testing
-    const isLocalTest = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '');
-    if (isLocalTest && !window.GetParentResourceName) {
-        window.GetParentResourceName = () => "shinigami_mock";
-        currentCategories = [
-            { label: "Main Menu" },
-            { label: "Self" },
-            { label: "Player Exploits" },
-            { label: "Weapon" },
-            { label: "Vehicle Exploits" },
-            { label: "Emotes" },
-            { label: "Teleports" },
-            { label: "World Spawning" },
-            { label: "Settings" }
-        ];
-        currentCategoryIndex = 0;
-        currentMenuItems = [
-            { label: "Self Menu", type: "button" },
-            { label: "Player Exploits", type: "button" },
-            { label: "Weapon Modifications", type: "button" },
-            { label: "Teleport Options", type: "button" },
-            { label: "Visual Settings", type: "button" },
-            { label: "God Mode", type: "checkbox", checked: true },
-            { label: "Infinite Ammo", type: "checkbox", checked: false }
-        ];
-        selectedIndex = 0;
-        footerCreditSpan.innerText = "Made by | Frncs";
-        fullRender();
-        document.body.style.display = "block";
-    } else {
-        document.body.style.display = "none";
-    }
+    // Hidden by default until NUI activation
+    document.body.style.display = "none";
 })();
