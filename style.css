@@ -1,0 +1,286 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    display: none;
+    /* hidden by default, shown via NUI event */
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    background: transparent;
+    overflow: hidden;
+    position: relative;
+}
+
+/* flexible wrapper to allow future positioning (top-left by default) */
+.menu-wrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    padding: 30px;
+    pointer-events: none;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+/* glassmorphism core container */
+.shinigami-menu {
+    width: 400px;
+    max-width: 90vw;
+    pointer-events: auto;
+    background: rgba(6, 6, 10, 0.82);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-top: 3px solid #ff3e3e;
+    border-radius: 20px;
+    box-shadow: 0 30px 45px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    opacity: 1;
+    transform: translateY(0);
+    animation: menuGlide 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes menuGlide {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* header area */
+.menu-header {
+    padding: 22px 24px 14px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(180deg, rgba(255, 62, 62, 0.06) 0%, rgba(0, 0, 0, 0) 100%);
+    text-align: center;
+}
+
+.menu-title {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 3px;
+    text-shadow: 0 0 14px rgba(255, 62, 62, 0.7);
+    line-height: 1.2;
+}
+
+.menu-subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: #ff5a5a;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    opacity: 0.9;
+}
+
+/* category tab with hints */
+.category-bar {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px 22px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #8f9ca8;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-name {
+    color: #ffffff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+}
+
+.category-name::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    background: #ff3e3e;
+    border-radius: 50%;
+    box-shadow: 0 0 7px #ff3e3e;
+}
+
+.tab-hint {
+    font-size: 9px;
+    background: rgba(255, 62, 62, 0.12);
+    padding: 4px 8px;
+    border-radius: 30px;
+    color: #ff8a7a;
+    font-weight: 600;
+}
+
+/* SCROLLABLE MENU LIST — FIXED HEIGHT + SMOOTH SCROLL */
+.menu-items-container {
+    max-height: 440px;
+    overflow-y: auto;
+    padding: 8px 0;
+    scroll-behavior: smooth;
+}
+
+/* custom red-scrollbar */
+.menu-items-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.menu-items-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.menu-items-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 62, 62, 0.6);
+    border-radius: 10px;
+}
+
+.menu-items-container::-webkit-scrollbar-thumb:hover {
+    background: #ff3e3e;
+}
+
+/* menu item row */
+.menu-item {
+    list-style: none;
+    padding: 12px 22px;
+    margin: 2px 12px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #cbd5e6;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.4, 1);
+    border-left: 3px solid transparent;
+    background: transparent;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+    transform: translateX(3px);
+}
+
+/* active selection: red left border + gradient glow */
+.menu-item.active {
+    background: linear-gradient(90deg, rgba(255, 62, 62, 0.16) 0%, rgba(255, 62, 62, 0.01) 90%);
+    border-left: 3px solid #ff3e3e;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: inset 0 0 6px rgba(255, 62, 62, 0.1);
+}
+
+/* right side value styling */
+.item-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.value-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 4px 10px;
+    border-radius: 40px;
+    letter-spacing: 0.3px;
+    color: #ff9e7a;
+    border: 0.5px solid rgba(255, 62, 62, 0.3);
+}
+
+.toggle-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 5px currentColor;
+}
+
+.toggle-status {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.scroll-arrow {
+    color: #ff6a5a;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.action-arrow {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    transition: 0.1s;
+}
+
+.menu-item.active .action-arrow {
+    color: #ff5a5a;
+    transform: translateX(2px);
+}
+
+/* footer */
+.menu-footer {
+    padding: 12px 22px;
+    background: rgba(0, 0, 0, 0.55);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    color: #6a7c8f;
+    backdrop-filter: blur(4px);
+}
+
+.footer-credit {
+    color: #ff5a5a;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+.footer-counter {
+    background: rgba(255, 62, 62, 0.12);
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-weight: 700;
+    color: #ffaa9a;
+    font-size: 10px;
+}
+
+/* responsive behavior */
+@media (max-width: 600px) {
+    .menu-wrapper {
+        padding: 15px;
+    }
+
+    .shinigami-menu {
+        width: 360px;
+    }
+
+    .menu-item {
+        padding: 10px 18px;
+        font-size: 12px;
+    }
+}

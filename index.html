@@ -3,280 +3,34 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHINIGAMI ESSE</title>
-    <!-- Google Fonts -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Shinigami Esse · Enhanced NUI Menu</title>
+    <!-- Google Fonts (no external deps besides fonts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Orbitron:wght@500;700;900&display=swap"
         rel="stylesheet">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
-        html, body {
-            background-color: transparent !important;
-            background: transparent !important;
-        }
-
-        body {
-            display: none;
-            /* Hidden by default */
-            font-family: 'Inter', sans-serif;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Full-screen flex container to handle position dynamically from Lua */
-        .PWrapper {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            padding: 30px;
-            box-sizing: border-box;
-            pointer-events: none;
-            /* Let clicks pass through empty areas of screen */
-            /* Default alignment (top-left) */
-            justify-content: flex-start;
-            align-items: flex-start;
-        }
-
-        /* Glassmorphism Menu Container */
-        .menu-container {
-            width: 380px;
-            pointer-events: auto;
-            /* Re-enable pointer events for the menu itself */
-            background: rgba(10, 10, 12, 0.75);
-            backdrop-filter: blur(20px) saturate(160%);
-            -webkit-backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 3px solid #ff3e3e;
-            /* Accent top line */
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Header Logo Section */
-        .menu-header {
-            padding: 24px 20px 15px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: linear-gradient(180deg, rgba(255, 62, 62, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
-            text-align: center;
-        }
-
-        .menu-title {
-            font-family: 'Cinzel', serif;
-            font-size: 20px;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 2px;
-            text-shadow: 0 0 12px rgba(255, 62, 62, 0.6);
-            margin-bottom: 4px;
-        }
-
-        .menu-subtitle {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            color: #ff3e3e;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            opacity: 0.9;
-        }
-
-        /* Active Tab / Category Selector */
-        .category-tab {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 10px 20px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            color: #8f9ca8;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .category-name {
-            color: #ffffff;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .category-name::before {
-            content: '';
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background-color: #ff3e3e;
-            border-radius: 50%;
-            box-shadow: 0 0 6px #ff3e3e;
-        }
-
-        /* Scrollable List of Menu Options */
-        .menu-items {
-            list-style: none;
-            max-height: 420px;
-            overflow-y: auto;
-            padding: 8px 0;
-        }
-
-        /* Custom Scrollbar for Menu Items */
-        .menu-items::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .menu-items::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .menu-items::-webkit-scrollbar-thumb {
-            background: rgba(255, 62, 62, 0.3);
-            border-radius: 10px;
-        }
-
-        .menu-items::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 62, 62, 0.6);
-        }
-
-        /* Menu Item Styling */
-        .menu-item {
-            padding: 12px 20px;
-            margin: 2px 8px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #d1d5db;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative;
-            border: 1px solid transparent;
-        }
-
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.03);
-            color: #ffffff;
-        }
-
-        /* Active / Selected Menu Item style */
-        .menu-item.active {
-            background: linear-gradient(90deg, rgba(255, 62, 62, 0.15) 0%, rgba(255, 62, 62, 0.03) 100%);
-            border-color: rgba(255, 62, 62, 0.3);
-            color: #ffffff;
-            font-weight: 600;
-            padding-left: 26px;
-        }
-
-        .menu-item.active::before {
-            content: '';
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 4px;
-            height: 12px;
-            background-color: #ff3e3e;
-            border-radius: 2px;
-            box-shadow: 0 0 8px rgba(255, 62, 62, 0.8);
-            transition: all 0.2s ease;
-        }
-
-        .item-action-indicator {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .menu-item.active .item-action-indicator {
-            color: #ff3e3e;
-            transform: translateX(-2px);
-        }
-
-        /* Footer Status Section */
-        .menu-footer {
-            padding: 12px 20px;
-            background: rgba(5, 5, 6, 0.9);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            color: #64748b;
-        }
-
-        .footer-status {
-            color: rgba(255, 62, 62, 0.8);
-            letter-spacing: 0.5px;
-            font-weight: 700;
-        }
-
-        .footer-counter {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 3px 8px;
-            border-radius: 12px;
-            color: #94a3b8;
-            font-size: 9px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="PWrapper">
-        <div class="menu-container">
-            <!-- Header -->
+    <div class="menu-wrapper">
+        <div class="shinigami-menu">
             <div class="menu-header">
-                <div class="menu-title">Shinigami</div>
-                <div class="menu-subtitle">Esse</div>
+                <div class="menu-title">SHINIGAMI</div>
+                <div class="menu-subtitle">ESSE</div>
             </div>
-
-            <!-- Active Category -->
-            <div class="category-tab">
-                <span class="category-name">Main Menu</span>
-                <span style="font-size: 9px; opacity: 0.6;">NUI v1.2</span>
+            <div class="category-bar">
+                <span class="category-name" id="categoryLabel">Main Menu</span>
+                <span class="tab-hint">◀ Q / E ▶</span>
             </div>
-
-            <!-- Dynamic Menu Items -->
-            <ul class="menu-items" id="menu-list">
-                <!-- Items will be injected by JavaScript -->
-            </ul>
-
-            <!-- Footer -->
+            <div class="menu-items-container" id="menuListContainer">
+                <!-- dynamic items injected here -->
+            </div>
             <div class="menu-footer">
-                <span class="footer-status">Made by| Frncs</span>
-                <span class="footer-counter" id="menu-counter">0 / 0</span>
+                <span class="footer-credit" id="footerCredits">Made By | Frncs</span>
+                <span class="footer-counter" id="itemCounter">0 / 0</span>
             </div>
         </div>
     </div>
