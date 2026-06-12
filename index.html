@@ -4,33 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Shinigami Esse · Enhanced NUI Menu</title>
-    <!-- Google Fonts (no external deps besides fonts) -->
+    <title>Shinigami Esse · Royal Malta Style NUI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Orbitron:wght@500;700;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Orbitron:wght@400;500;700;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="menu-wrapper">
-        <div class="shinigami-menu">
+    <div class="nui-wrapper">
+        <div class="menu-container">
+            <!-- Header -->
             <div class="menu-header">
                 <div class="menu-title">SHINIGAMI</div>
                 <div class="menu-subtitle">ESSE</div>
             </div>
-            <div class="category-bar">
-                <span class="category-name" id="categoryLabel">Main Menu</span>
-                <span class="tab-hint">◀ Q / E ▶</span>
+
+            <!-- Category Tabs Row -->
+            <div class="category-tabs" id="categoryTabs">
+                <!-- Dynamic tabs injected here -->
             </div>
-            <div class="menu-items-container" id="menuListContainer">
-                <!-- dynamic items injected here -->
+
+            <!-- Menu Items List -->
+            <div class="menu-items-wrapper">
+                <ul class="menu-list" id="menuList">
+                    <!-- Dynamic menu items injected here -->
+                </ul>
             </div>
+
+            <!-- Footer -->
             <div class="menu-footer">
-                <span class="footer-credit" id="footerCredits">Made By | Frncs</span>
-                <span class="footer-counter" id="itemCounter">0 / 0</span>
+                <span class="footer-credit" id="footerCredit">/cracked by | Frncs</span>
+                <span class="footer-counter" id="itemCounter">1/8</span>
             </div>
         </div>
     </div>

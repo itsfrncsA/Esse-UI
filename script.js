@@ -1,23 +1,23 @@
-// -------------------- SHINIGAMI ESSE - ENHANCED NUI MENU --------------------
+// ==================== SHINIGAMI ESSE - STYLE NUI ====================
 (function () {
-    // ----- STATE -----
-    let currentCategories = [];        // array of { label, ... }
+    // State
+    let currentCategories = [];
     let currentCategoryIndex = 0;
-    let currentMenuItems = [];          // elements array { label, type, ... }
+    let currentMenuItems = [];
     let selectedIndex = 0;
 
-    // DOM refs
-    const container = document.getElementById("menuListContainer");
-    const categoryLabelSpan = document.getElementById("categoryLabel");
+    // DOM Elements
+    const categoryTabsContainer = document.getElementById("categoryTabs");
+    const menuListEl = document.getElementById("menuList");
+    const footerCreditSpan = document.getElementById("footerCredit");
     const itemCounterSpan = document.getElementById("itemCounter");
-    const footerCreditSpan = document.getElementById("footerCredits");
 
-    // Helper: get parent resource for FiveM
+    // Helper: Get parent resource for FiveM
     const getParentResource = () => {
         return window.GetParentResourceName ? window.GetParentResourceName() : "shinigami_esse";
     };
 
-    // send action to client (menu interaction)
+    // Send action to client
     function emitToClient(actionType, extraData = {}) {
         const currentItem = currentMenuItems[selectedIndex] || null;
         const payload = {
@@ -40,11 +40,10 @@
         }).catch(err => console.warn("[Shinigami] fetch error:", err));
     }
 
-    // close and hide menu
+    // Close menu
     function closeMenu() {
         document.body.style.display = "none";
         emitToClient("closeNUI");
-        // additional direct close event
         fetch(`https://${getParentResource()}/closeNUI`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -52,72 +51,90 @@
         }).catch(() => { });
     }
 
-    // update footer counter
+    // Update footer counter
     function updateCounter() {
         if (!currentMenuItems.length) {
-            itemCounterSpan.innerText = `0 / 0`;
+            itemCounterSpan.innerText = "0/0";
             return;
         }
-        itemCounterSpan.innerText = `${selectedIndex + 1} / ${currentMenuItems.length}`;
+        itemCounterSpan.innerText = `${selectedIndex + 1}/${currentMenuItems.length}`;
     }
 
-    // auto-scroll active item into view (smooth)
+    // Scroll active item into view
     function scrollToActiveItem() {
-        if (!container) return;
-        const activeLi = container.querySelector('.menu-item.active');
-        if (activeLi) {
-            activeLi.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (!menuListEl) return;
+        const activeItem = menuListEl.querySelector('.menu-item.active');
+        if (activeItem) {
+            activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
     }
 
-    // Render full menu based on currentMenuItems & selectedIndex
-    function renderMenu() {
-        if (!container) return;
+    // Render category tabs
+    function renderCategoryTabs() {
+        if (!categoryTabsContainer) return;
+        categoryTabsContainer.innerHTML = "";
 
-        // Update category label
-        if (currentCategories && currentCategories[currentCategoryIndex]) {
-            categoryLabelSpan.textContent = currentCategories[currentCategoryIndex].label || "Main Menu";
-        } else if (currentCategories.length) {
-            categoryLabelSpan.textContent = currentCategories[0]?.label || "Shinigami";
-        } else {
-            categoryLabelSpan.textContent = "Main Menu";
+        if (!currentCategories.length) {
+            // Default fallback tab
+            const defaultTab = document.createElement('div');
+            defaultTab.className = "category-tab active";
+            defaultTab.innerText = "Main Menu";
+            categoryTabsContainer.appendChild(defaultTab);
+            return;
         }
 
-        // clear container
-        container.innerHTML = "";
+        currentCategories.forEach((cat, idx) => {
+            const tab = document.createElement('div');
+            tab.className = `category-tab ${idx === currentCategoryIndex ? 'active' : ''}`;
+            tab.innerText = cat.label || "Menu";
+            tab.addEventListener('click', () => {
+                if (idx !== currentCategoryIndex) {
+                    currentCategoryIndex = idx;
+                    emitToClient("changeCategory", { newCategoryIndex: currentCategoryIndex });
+                    renderCategoryTabs();
+                    // Client will send new elements via updateElements
+                }
+            });
+            categoryTabsContainer.appendChild(tab);
+        });
+    }
+
+    // Render menu items
+    function renderMenuItems() {
+        if (!menuListEl) return;
+        menuListEl.innerHTML = "";
+
         if (!currentMenuItems.length) {
-            const emptyMsg = document.createElement('div');
-            emptyMsg.className = "menu-item";
-            emptyMsg.style.justifyContent = "center";
-            emptyMsg.style.opacity = "0.7";
-            emptyMsg.innerHTML = `<span>⚔️ no options available ⚔️</span>`;
-            container.appendChild(emptyMsg);
+            const emptyLi = document.createElement('li');
+            emptyLi.className = "menu-item";
+            emptyLi.style.justifyContent = "center";
+            emptyLi.style.opacity = "0.6";
+            emptyLi.innerHTML = `<span>No options available</span>`;
+            menuListEl.appendChild(emptyLi);
             updateCounter();
             return;
         }
 
-        // clamp selected index
+        // Clamp selected index
         if (selectedIndex >= currentMenuItems.length) selectedIndex = currentMenuItems.length - 1;
         if (selectedIndex < 0 && currentMenuItems.length) selectedIndex = 0;
 
-        // build items
         currentMenuItems.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = `menu-item ${idx === selectedIndex ? 'active' : ''}`;
+            const li = document.createElement('li');
+            li.className = `menu-item ${idx === selectedIndex ? 'active' : ''}`;
 
-            // left label
+            // Left label
             const leftSpan = document.createElement('span');
             leftSpan.innerText = item.label;
 
-            // right part (dynamic based on type)
+            // Right side based on type
             const rightDiv = document.createElement('div');
             rightDiv.className = "item-right";
 
             if (item.type === 'button') {
-                // show arrow indicator
                 const arrowSpan = document.createElement('span');
-                arrowSpan.className = 'action-arrow';
-                arrowSpan.innerText = '▶';
+                arrowSpan.className = 'indicator-arrow';
+                arrowSpan.innerText = '›';
                 rightDiv.appendChild(arrowSpan);
             }
             else if (item.type === 'checkbox') {
@@ -125,99 +142,92 @@
                 const dotSpan = document.createElement('span');
                 dotSpan.className = 'toggle-dot';
                 dotSpan.style.backgroundColor = isChecked ? '#10b981' : '#ef4444';
-                dotSpan.style.boxShadow = isChecked ? '0 0 6px #10b981' : '0 0 4px #ef4444';
-                const statusSpan = document.createElement('span');
-                statusSpan.className = 'toggle-status';
-                statusSpan.style.color = isChecked ? '#86efac' : '#f87171';
-                statusSpan.innerText = isChecked ? 'ON' : 'OFF';
+                dotSpan.style.boxShadow = isChecked ? '0 0 5px #10b981' : '0 0 3px #ef4444';
+                const textSpan = document.createElement('span');
+                textSpan.className = 'toggle-text';
+                textSpan.style.color = isChecked ? '#86efac' : '#f87171';
+                textSpan.innerText = isChecked ? 'ON' : 'OFF';
                 rightDiv.appendChild(dotSpan);
-                rightDiv.appendChild(statusSpan);
+                rightDiv.appendChild(textSpan);
             }
             else if (item.type === 'scrollable') {
-                let valuesArray = item.values || ['Option A', 'Option B', 'Option C'];
-                let currentValIndex = (item.value !== undefined && item.value >= 0 && item.value < valuesArray.length) ? item.value : 0;
-                const displayValue = valuesArray[currentValIndex] || '???';
+                const valuesArr = item.values || ['Value 1', 'Value 2', 'Value 3'];
+                let currentValIdx = (item.value !== undefined && item.value >= 0 && item.value < valuesArr.length) ? item.value : 0;
+                const displayVal = valuesArr[currentValIdx] || '???';
                 const badgeSpan = document.createElement('span');
-                badgeSpan.className = 'value-badge';
-                badgeSpan.innerHTML = `◀ ${displayValue} ▶`;
-                badgeSpan.style.cursor = 'pointer';
+                badgeSpan.className = 'scrollable-badge';
+                badgeSpan.innerHTML = `◀ ${displayVal} ▶`;
                 rightDiv.appendChild(badgeSpan);
             }
             else if (item.type === 'slider') {
                 let sliderVal = (item.value !== undefined) ? item.value : (item.min || 0);
                 const badgeSpan = document.createElement('span');
-                badgeSpan.className = 'value-badge';
+                badgeSpan.className = 'slider-badge';
                 badgeSpan.innerText = `${sliderVal}`;
                 rightDiv.appendChild(badgeSpan);
             }
             else {
-                // fallback for unknown types
                 const fallbackSpan = document.createElement('span');
-                fallbackSpan.className = 'action-arrow';
-                fallbackSpan.innerText = '▸';
+                fallbackSpan.className = 'indicator-arrow';
+                fallbackSpan.innerText = '›';
                 rightDiv.appendChild(fallbackSpan);
             }
 
-            div.appendChild(leftSpan);
-            div.appendChild(rightDiv);
+            li.appendChild(leftSpan);
+            li.appendChild(rightDiv);
 
-            // mouse events: hover changes selection without breaking keyboard
-            div.addEventListener('mouseenter', (e) => {
+            // Hover selection
+            li.addEventListener('mouseenter', () => {
                 if (selectedIndex !== idx) {
-                    // update active class only
-                    const prevActive = container.querySelector('.menu-item.active');
+                    const prevActive = menuListEl.querySelector('.menu-item.active');
                     if (prevActive) prevActive.classList.remove('active');
                     selectedIndex = idx;
-                    div.classList.add('active');
+                    li.classList.add('active');
                     updateCounter();
                     scrollToActiveItem();
                 }
             });
 
-            // click triggers action
-            div.addEventListener('click', (e) => {
-                e.stopPropagation();
+            // Click action
+            li.addEventListener('click', () => {
                 if (selectedIndex !== idx) {
-                    const prevActive = container.querySelector('.menu-item.active');
+                    const prevActive = menuListEl.querySelector('.menu-item.active');
                     if (prevActive) prevActive.classList.remove('active');
                     selectedIndex = idx;
-                    div.classList.add('active');
+                    li.classList.add('active');
                     updateCounter();
                     scrollToActiveItem();
                 }
-                executeCurrentItemAction();
+                executeCurrentAction();
             });
 
-            container.appendChild(div);
+            menuListEl.appendChild(li);
         });
 
         updateCounter();
         scrollToActiveItem();
     }
 
-    // executes action based on current selected item type (local state + client)
-    function executeCurrentItemAction() {
+    // Execute action for current selected item
+    function executeCurrentAction() {
         if (!currentMenuItems.length) return;
         const item = currentMenuItems[selectedIndex];
         if (!item) return;
 
-        // handle local state modifications for immediate feedback
         if (item.type === 'checkbox') {
-            // toggle locally
             item.checked = !item.checked;
-            renderMenu();   // re-render to show fresh ON/OFF
+            renderMenuItems();
             emitToClient("toggleCheckbox", {
                 label: item.label,
                 newState: item.checked
             });
         }
         else if (item.type === 'scrollable') {
-            // cycle value
             const valuesArr = item.values || [];
             if (valuesArr.length > 0) {
                 let newIdx = ((item.value || 0) + 1) % valuesArr.length;
                 item.value = newIdx;
-                renderMenu();  // update display
+                renderMenuItems();
                 emitToClient("scrollableChange", {
                     label: item.label,
                     selectedValue: valuesArr[newIdx],
@@ -228,26 +238,30 @@
             }
         }
         else if (item.type === 'slider') {
-            // notify client about slider selection; client can handle increment/decrement separately if needed
             emitToClient("sliderSelect", {
                 label: item.label,
                 currentValue: item.value
             });
         }
         else {
-            // button or generic
             emitToClient("selectItem", {});
         }
     }
 
-    // ----- KEYBOARD NAVIGATION (full support) -----
+    // Full render
+    function fullRender() {
+        renderCategoryTabs();
+        renderMenuItems();
+    }
+
+    // Navigation
     function navigateUp() {
         if (!currentMenuItems.length) return;
         let newIdx = selectedIndex - 1;
         if (newIdx < 0) newIdx = currentMenuItems.length - 1;
         if (newIdx !== selectedIndex) {
             selectedIndex = newIdx;
-            renderMenu();
+            renderMenuItems();
         }
     }
 
@@ -257,25 +271,23 @@
         if (newIdx >= currentMenuItems.length) newIdx = 0;
         if (newIdx !== selectedIndex) {
             selectedIndex = newIdx;
-            renderMenu();
+            renderMenuItems();
         }
     }
 
-    // switch category (prev / next) and request update from client
     function switchCategory(direction) {
         if (!currentCategories.length) return;
-        let newCatIdx = currentCategoryIndex;
+        let newIdx = currentCategoryIndex;
         if (direction === 'prev') {
-            newCatIdx = currentCategoryIndex - 1;
-            if (newCatIdx < 0) newCatIdx = currentCategories.length - 1;
+            newIdx = currentCategoryIndex - 1;
+            if (newIdx < 0) newIdx = currentCategories.length - 1;
         } else if (direction === 'next') {
-            newCatIdx = (currentCategoryIndex + 1) % currentCategories.length;
+            newIdx = (currentCategoryIndex + 1) % currentCategories.length;
         }
-        if (newCatIdx !== currentCategoryIndex) {
-            currentCategoryIndex = newCatIdx;
-            // notify lua script that category changed, expect new elements via event
+        if (newIdx !== currentCategoryIndex) {
+            currentCategoryIndex = newIdx;
             emitToClient("changeCategory", { newCategoryIndex: currentCategoryIndex });
-            // also optional: fetch new elements — client side will push 'updateElements' message.
+            renderCategoryTabs();
         }
     }
 
@@ -283,14 +295,13 @@
     function onKeyDown(e) {
         if (document.body.style.display !== 'block') return;
         const key = e.key;
-        const navigationKeys = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Backspace', 'e', 'E', 'q', 'Q'];
-        if (navigationKeys.includes(key)) {
-            e.preventDefault();
-        }
+        const navKeys = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Backspace', 'e', 'E', 'q', 'Q'];
+        if (navKeys.includes(key)) e.preventDefault();
+
         switch (key) {
             case 'ArrowUp': navigateUp(); break;
             case 'ArrowDown': navigateDown(); break;
-            case 'Enter': executeCurrentItemAction(); break;
+            case 'Enter': executeCurrentAction(); break;
             case 'Escape': case 'Backspace': closeMenu(); break;
             case 'e': case 'E': switchCategory('prev'); break;
             case 'q': case 'Q': switchCategory('next'); break;
@@ -298,12 +309,12 @@
         }
     }
 
-    // ----- LISTEN FOR FIVEM NUI MESSAGES (dynamic updates) -----
+    // Listen for FiveM NUI messages
     window.addEventListener('message', (event) => {
         const data = event.data;
         if (!data) return;
 
-        // UI visibility and full data load
+        // Show/Hide UI
         if (data.type === 'ui' || data.action === 'showUI') {
             const visible = (data.type === 'ui') ? data.status : data.visible;
             if (visible === true) {
@@ -312,74 +323,66 @@
                 if (data.categories) currentCategories = data.categories;
                 if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
                 if (data.selectedIndex !== undefined) selectedIndex = data.selectedIndex;
-                if (data.username) footerCreditSpan.innerText = `cracked for | ${data.username}`;
-                // clamp selected index
+                if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
                 if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
-                renderMenu();
+                fullRender();
             } else {
                 document.body.style.display = 'none';
             }
             return;
         }
 
-        // dynamic updateElements (after category switch, initial load, etc)
+        // Update Elements
         if (data.action === 'updateElements') {
             if (data.elements) currentMenuItems = data.elements;
             if (data.categories) currentCategories = data.categories;
             if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
             if (data.selectedIndex !== undefined) selectedIndex = data.selectedIndex;
-            if (data.username) footerCreditSpan.innerText = `cracked for | ${data.username}`;
+            if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
             if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
-            renderMenu();
+            fullRender();
         }
 
-        // sync index from external (like lua wants to move selection)
+        // Sync Index
         if (data.action === 'syncIndex') {
             if (data.index !== undefined && currentMenuItems.length && data.index < currentMenuItems.length) {
                 selectedIndex = data.index;
-                renderMenu();
+                renderMenuItems();
             }
-        }
-
-        // set categories externally
-        if (data.action === 'setCategories') {
-            if (data.categories) currentCategories = data.categories;
-            if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
-            renderMenu();
         }
     });
 
-    // attach keyboard listener
+    // Attach keyboard listener
     window.addEventListener('keydown', onKeyDown);
 
-    // ----- MOCK / FALLBACK FOR STANDALONE TESTING (outside FiveM) -----
-    // auto-detect if running in pure browser or local file -> show demo
+    // DEMO MODE for local testing (matches Royal Malta style)
     const isLocalTest = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '');
     if (isLocalTest && !window.GetParentResourceName) {
         window.GetParentResourceName = () => "shinigami_mock";
-        // demo categories and items for preview
         currentCategories = [
-            { label: "MAIN MENU" },
-            { label: "PLAYER MODS" },
-            { label: "WEAPON MODS" },
-            { label: "VISUALS" }
+            { label: "Main Menu" },
+            { label: "Self" },
+            { label: "Player Exploits" },
+            { label: "Weapon" },
+            { label: "Vehicle Exploits" },
+            { label: "Emotes" },
+            { label: "Teleports" },
+            { label: "World Spawning" },
+            { label: "Settings" }
         ];
         currentCategoryIndex = 0;
         currentMenuItems = [
-            { label: "Self Options", type: "button" },
-            { label: "God Mode", type: "checkbox", checked: true },
-            { label: "Infinite Stamina", type: "checkbox", checked: false },
-            { label: "Super Speed", type: "slider", min: 0, max: 100, value: 42 },
-            { label: "Kill Aura", type: "scrollable", values: ["Players Only", "All NPCs", "Off"], value: 0 },
-            { label: "Give All Weapons", type: "button" },
-            { label: "Teleport to Marker", type: "button" }
+            { label: "Self Menu", type: "button" },
+            { label: "Player Exploits", type: "button" },
+            { label: "Weapon Modifications", type: "button" },
+            { label: "Teleport Options", type: "button" },
+            { label: "Visual Settings", type: "button" }
         ];
         selectedIndex = 0;
-        footerCreditSpan.innerText = "Made By | Frncs";
-        renderMenu();
+        footerCreditSpan.innerText = "/cracked by | Frncs";
+        fullRender();
         document.body.style.display = "block";
     } else {
-        // default hidden until NUI activation
         document.body.style.display = "none";
     }
 })();
