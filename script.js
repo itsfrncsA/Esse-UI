@@ -51,7 +51,7 @@ const categoryNameEl = document.querySelector(".category-name");
 if (typeof GetParentResourceName === 'undefined') {
     window.GetParentResourceName = () => "my_nui_resource";
     document.body.style.display = "block";
-    
+
     // Load mock data
     categories = mockCategories;
     categoryIndex = 0;
@@ -62,7 +62,7 @@ if (typeof GetParentResourceName === 'undefined') {
 // Render menu items dynamically based on their type
 function renderMenu() {
     menuListEl.innerHTML = "";
-    
+
     // Update active tab label
     if (categories && categories[categoryIndex]) {
         categoryNameEl.textContent = categories[categoryIndex].label;
@@ -79,9 +79,9 @@ function renderMenu() {
     menuItems.forEach((item, index) => {
         const li = document.createElement("li");
         li.className = "menu-item" + (index === selectedIndex ? " active" : "");
-        
+
         let controlHTML = "";
-        
+
         // Render control based on element type
         if (item.type === "checkbox" || item.type === "scrollable-checkbox" || item.type === "slider-checkbox") {
             const statusColor = item.checked ? "#10b981" : "#ef4444";
@@ -102,7 +102,7 @@ function renderMenu() {
                 ${controlHTML}
             </div>
         `;
-        
+
         // Mouse hover handler
         li.addEventListener("mouseenter", () => {
             setSelection(index);
@@ -122,17 +122,17 @@ function renderMenu() {
 function setSelection(index) {
     if (!menuItems || menuItems.length === 0) return;
     if (index < 0 || index >= menuItems.length) return;
-    
+
     const items = menuListEl.querySelectorAll(".menu-item");
     if (items[selectedIndex]) items[selectedIndex].classList.remove("active");
-    
+
     selectedIndex = index;
-    
+
     if (items[selectedIndex]) {
         items[selectedIndex].classList.add("active");
         items[selectedIndex].scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
-    
+
     updateCounter();
 }
 
@@ -157,8 +157,8 @@ function triggerAction(index) {
             headers: {
                 'Content-Type': 'application/json; charset=UTF-8'
             },
-            body: JSON.stringify({ 
-                action: item.action || "select", 
+            body: JSON.stringify({
+                action: item.action || "select",
                 index: index,
                 label: item.label
             })
@@ -184,8 +184,8 @@ function changeTab(direction) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
             body: JSON.stringify({})
-        }).catch(() => {});
-        
+        }).catch(() => { });
+
         // Browser fallback navigation
         if (typeof GetParentResourceName === 'undefined' || window.location.hostname === 'itsfrncsa.github.io') {
             categoryIndex = (categoryIndex - 1 + categories.length) % categories.length;
@@ -199,7 +199,7 @@ function changeTab(direction) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
             body: JSON.stringify({})
-        }).catch(() => {});
+        }).catch(() => { });
 
         // Browser fallback navigation
         if (typeof GetParentResourceName === 'undefined' || window.location.hostname === 'itsfrncsa.github.io') {
@@ -212,7 +212,7 @@ function changeTab(direction) {
 }
 
 // Keyboard Navigation Listener
-window.addEventListener("keydown", function(event) {
+window.addEventListener("keydown", function (event) {
     if (document.body.style.display !== "block") return;
 
     switch (event.key) {
@@ -252,7 +252,7 @@ window.addEventListener("keydown", function(event) {
 });
 
 // Listen for dynamic messages from Lua
-window.addEventListener('message', function(event) {
+window.addEventListener('message', function (event) {
     let item = event.data;
 
     // Handle local NUI resource toggle command (/opennui)
@@ -293,7 +293,7 @@ window.addEventListener('message', function(event) {
     } else if (item.action === "updateAuthFooter") {
         const statusEl = document.querySelector(".footer-status");
         if (statusEl && item.username) {
-            statusEl.textContent = `./cracked for | ${item.username}`;
+            statusEl.textContent = ` | ${item.username}`;
         }
     }
 });
