@@ -255,6 +255,19 @@ window.addEventListener("keydown", function(event) {
 window.addEventListener('message', function(event) {
     let item = event.data;
 
+    // Handle local NUI resource toggle command (/opennui)
+    if (item.type === "ui") {
+        if (item.status === true) {
+            document.body.style.display = "block";
+            // Ensure we render the current options/mock data
+            renderMenu();
+            setSelection(selectedIndex);
+        } else {
+            document.body.style.display = "none";
+        }
+        return;
+    }
+
     if (item.action === "showUI") {
         if (item.visible === true) {
             document.body.style.display = "block";
