@@ -1,3 +1,13 @@
+// FiveM browser environment fallback detection
+if (typeof GetParentResourceName === 'undefined') {
+    window.GetParentResourceName = () => "my_nui_resource";
+    // Auto-display the menu when viewed in a normal web browser
+    window.addEventListener('DOMContentLoaded', () => {
+        document.body.style.display = "block";
+        setSelection(0);
+    });
+}
+
 const menuItems = [
     { label: "Self Menu", action: "self" },
     { label: "Player Exploits", action: "exploits" },
