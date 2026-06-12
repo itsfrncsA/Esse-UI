@@ -1,4 +1,4 @@
-// ==================== SHINIGAMI ESSE - STYLE NUI ====================
+// ==================== SHINIGAMI ESSE - FULLY FIXED ====================
 (function () {
     // State
     let currentCategories = [];
@@ -12,12 +12,12 @@
     const footerCreditSpan = document.getElementById("footerCredit");
     const itemCounterSpan = document.getElementById("itemCounter");
 
-    // Helper: Get parent resource for FiveM
+    // Get parent resource for FiveM
     const getParentResource = () => {
         return window.GetParentResourceName ? window.GetParentResourceName() : "shinigami_esse";
     };
 
-    // Send action to client
+    // Send to client
     function emitToClient(actionType, extraData = {}) {
         const currentItem = currentMenuItems[selectedIndex] || null;
         const payload = {
@@ -37,7 +37,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
             body: JSON.stringify(payload)
-        }).catch(err => console.warn("[Shinigami] fetch error:", err));
+        }).catch(() => { });
     }
 
     // Close menu
@@ -51,7 +51,7 @@
         }).catch(() => { });
     }
 
-    // Update footer counter
+    // Update counter
     function updateCounter() {
         if (!currentMenuItems.length) {
             itemCounterSpan.innerText = "0/0";
@@ -60,7 +60,7 @@
         itemCounterSpan.innerText = `${selectedIndex + 1}/${currentMenuItems.length}`;
     }
 
-    // Scroll active item into view
+    // Scroll to active
     function scrollToActiveItem() {
         if (!menuListEl) return;
         const activeItem = menuListEl.querySelector('.menu-item.active');
@@ -75,7 +75,6 @@
         categoryTabsContainer.innerHTML = "";
 
         if (!currentCategories.length) {
-            // Default fallback tab
             const defaultTab = document.createElement('div');
             defaultTab.className = "category-tab active";
             defaultTab.innerText = "Main Menu";
@@ -92,7 +91,6 @@
                     currentCategoryIndex = idx;
                     emitToClient("changeCategory", { newCategoryIndex: currentCategoryIndex });
                     renderCategoryTabs();
-                    // Client will send new elements via updateElements
                 }
             });
             categoryTabsContainer.appendChild(tab);
@@ -142,7 +140,7 @@
                 const dotSpan = document.createElement('span');
                 dotSpan.className = 'toggle-dot';
                 dotSpan.style.backgroundColor = isChecked ? '#10b981' : '#ef4444';
-                dotSpan.style.boxShadow = isChecked ? '0 0 5px #10b981' : '0 0 3px #ef4444';
+                dotSpan.style.boxShadow = isChecked ? '0 0 6px #10b981' : '0 0 3px #ef4444';
                 const textSpan = document.createElement('span');
                 textSpan.className = 'toggle-text';
                 textSpan.style.color = isChecked ? '#86efac' : '#f87171';
@@ -355,7 +353,7 @@
     // Attach keyboard listener
     window.addEventListener('keydown', onKeyDown);
 
-    // DEMO MODE for local testing (matches Royal Malta style)
+    // DEMO MODE for local testing
     const isLocalTest = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '');
     if (isLocalTest && !window.GetParentResourceName) {
         window.GetParentResourceName = () => "shinigami_mock";
@@ -376,10 +374,12 @@
             { label: "Player Exploits", type: "button" },
             { label: "Weapon Modifications", type: "button" },
             { label: "Teleport Options", type: "button" },
-            { label: "Visual Settings", type: "button" }
+            { label: "Visual Settings", type: "button" },
+            { label: "God Mode", type: "checkbox", checked: true },
+            { label: "Infinite Ammo", type: "checkbox", checked: false }
         ];
         selectedIndex = 0;
-        footerCreditSpan.innerText = "/cracked by | Frncs";
+        footerCreditSpan.innerText = "Made by | Frncs";
         fullRender();
         document.body.style.display = "block";
     } else {
