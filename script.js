@@ -571,8 +571,9 @@
     renderCategoryTabs();
     renderMenuItems();
 
-    // Browser Mock Mode Fallback Styling & Visibility
-    if (!window.GetParentResourceName) {
+    // Browser Mock Mode - only activate when opened as a local file for testing
+    // (DUI loads from https://, standard NUI loads from nui://, only local testing uses file://)
+    if (window.location.protocol === 'file:') {
         document.body.style.background = "radial-gradient(circle at 30% 20%, #0a0a0f 0%, #050508 100%)";
         document.getElementById("mainMenu").style.display = "flex";
     }
