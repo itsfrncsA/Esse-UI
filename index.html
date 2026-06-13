@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Shinigami Esse · Paranoia Menu</title>
+    <title>Shinigami Esse ·Menu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -14,26 +14,39 @@
 </head>
 
 <body>
-    <div class="nui-wrapper">
+    <!-- Main Menu -->
+    <div class="nui-wrapper" id="mainMenu">
         <div class="menu-container">
-            <!-- Header -->
             <div class="menu-header">
                 <div class="menu-title">SHINIGAMI</div>
                 <div class="menu-subtitle">ESSE</div>
             </div>
 
-            <!-- Category Tabs -->
             <div class="category-tabs" id="categoryTabs"></div>
 
-            <!-- Menu Items -->
             <div class="menu-items-wrapper">
                 <ul class="menu-list" id="menuList"></ul>
-            </div>
+            </div>w
 
-            <!-- Footer -->
             <div class="menu-footer">
-                <span class="footer-credit" id="footerCredit">/cracked by | Frncs</span>
+                <span class="footer-credit" id="footerCredit">/Made By | Frncs</span>
                 <span class="footer-counter" id="itemCounter">1/8</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Selector Overlay -->
+    <div class="key-selector-overlay" id="keySelectorOverlay">
+        <div class="key-selector-container">
+            <div class="key-selector-header">
+                <div class="key-selector-title">SELECT MENU KEY</div>
+                <div class="key-selector-subtitle">Press any key to bind</div>
+            </div>
+            <div class="key-selector-display" id="keyDisplay">
+                <span class="key-placeholder">⌨</span>
+            </div>
+            <div class="key-selector-footer">
+                <span>Press ESC to cancel</span>
             </div>
         </div>
     </div>

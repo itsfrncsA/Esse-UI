@@ -1,23 +1,64 @@
 // ==================== SHINIGAMI ESSE - PARANOIA MENU ====================
 (function () {
+    // Demo Data - Matches your screenshot
+    const demoCategories = [
+        { label: "List" },
+        { label: "Safe" },
+        { label: "Trolling" },
+        { label: "Risky" },
+        { label: "Vehicle" },
+        { label: "ALL" }
+    ];
+
+    const demoMenuItems = [
+        { label: "Teleport to Player", type: "button" },
+        { label: "Spectate Player", type: "checkbox", checked: true },
+        { label: "Copy Appearance", type: "button" },
+        { label: "Kill Player", type: "button" },
+        { label: "Launch Player (V1)", type: "button" },
+        { label: "Bug Player", type: "scrollable", values: ["Bug Player I", "Bug Player II", "Bug Player III", "Bug Player IV", "Bug Player V"], value: 1 },
+        { type: "divider", label: "Navigation" },
+        { label: "Waypoint to Player", type: "button" },
+        { label: "Track Player (Blip)", type: "checkbox", checked: false }
+    ];
+
     // State
-    let currentCategories = [];
+    let currentCategories = demoCategories;
     let currentCategoryIndex = 0;
-    let currentMenuItems = [];
+    let currentMenuItems = demoMenuItems;
     let selectedIndex = 0;
+    let isSelectingKey = false;
+    let pendingKeyCallback = null;
 
     // DOM Elements
     const categoryTabsContainer = document.getElementById("categoryTabs");
     const menuListEl = document.getElementById("menuList");
     const footerCreditSpan = document.getElementById("footerCredit");
     const itemCounterSpan = document.getElementById("itemCounter");
+    const keySelectorOverlay = document.getElementById("keySelectorOverlay");
+    const keyDisplay = document.getElementById("keyDisplay");
 
-    // Get parent resource for FiveM
+    // Key name mapping for display
+    const keyNames = {
+        'Escape': 'ESC', 'ArrowUp': '↑', 'ArrowDown': '↓', 'ArrowLeft': '←', 'ArrowRight': '→',
+        'Enter': 'ENTER', 'Backspace': 'BACKSPACE', 'Shift': 'SHIFT', 'Control': 'CTRL', 'Alt': 'ALT',
+        'Tab': 'TAB', 'CapsLock': 'CAPS', 'Delete': 'DEL', 'Home': 'HOME', 'End': 'END',
+        'PageUp': 'PGUP', 'PageDown': 'PGDN', 'Insert': 'INS', ' ': 'SPACE',
+        'Meta': 'WIN', 'ContextMenu': 'MENU', 'NumLock': 'NUMLOCK'
+    };
+
+    function getKeyDisplayName(key) {
+        if (keyNames[key]) return keyNames[key];
+        if (key.length === 1) return key.toUpperCase();
+        return key;
+    }
+
+    // Get parent resource for FiveM (if in FiveM environment)
     const getParentResource = () => {
         return window.GetParentResourceName ? window.GetParentResourceName() : "shinigami_esse";
     };
 
-    // Send to client
+    // Send to client (for FiveM)
     function emitToClient(actionType, extraData = {}) {
         const currentItem = currentMenuItems[selectedIndex] || null;
         const payload = {
@@ -33,22 +74,39 @@
             if (currentItem.type === 'scrollable') payload.scrollValue = currentItem.value;
             if (currentItem.type === 'slider') payload.sliderValue = currentItem.value;
         }
-        fetch(`https://${getParentResource()}/menuAction`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-            body: JSON.stringify(payload)
-        }).catch(() => { });
+
+        // Only send if in FiveM environment
+        if (window.GetParentResourceName) {
+            fetch(`https://${getParentResource()}/menuAction`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                body: JSON.stringify(payload)
+            }).catch(() => { });
+        } else {
+            console.log("[FiveM Mock]", actionType, payload);
+        }
     }
 
-    // Close menu
-    function closeMenu() {
-        document.body.style.display = "none";
-        emitToClient("closeNUI");
-        fetch(`https://${getParentResource()}/closeNUI`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        }).catch(() => { });
+    // Show key selector
+    function showKeySelector(callback) {
+        isSelectingKey = true;
+        pendingKeyCallback = callback;
+        keySelectorOverlay.style.display = "flex";
+        keyDisplay.innerHTML = `<span class="key-placeholder">⌨️</span>`;
+        keyDisplay.classList.remove('has-key');
+    }
+
+    function hideKeySelector() {
+        isSelectingKey = false;
+        keySelectorOverlay.style.display = "none";
+        pendingKeyCallback = null;
+    }
+
+    function onKeySelected(key) {
+        if (pendingKeyCallback) {
+            pendingKeyCallback(key);
+        }
+        hideKeySelector();
     }
 
     // Update counter
@@ -57,10 +115,12 @@
             itemCounterSpan.innerText = "0/0";
             return;
         }
-        itemCounterSpan.innerText = `${selectedIndex + 1}/${currentMenuItems.length}`;
+        const visibleItems = currentMenuItems.filter(item => item.type !== 'divider').length;
+        const currentVisibleIndex = currentMenuItems.filter((item, idx) => item.type !== 'divider' && idx <= selectedIndex).length;
+        itemCounterSpan.innerText = `${currentVisibleIndex}/${visibleItems}`;
     }
 
-    // Scroll to active
+    // Scroll to active item
     function scrollToActiveItem() {
         if (!menuListEl) return;
         const activeItem = menuListEl.querySelector('.menu-item.active');
@@ -91,13 +151,15 @@
                     currentCategoryIndex = idx;
                     emitToClient("changeCategory", { newCategoryIndex: currentCategoryIndex });
                     renderCategoryTabs();
+                    // In demo, we could load different items per category
+                    console.log(`Switched to category: ${cat.label}`);
                 }
             });
             categoryTabsContainer.appendChild(tab);
         });
     }
 
-    // Render a single item's right side based on type
+    // Render right side based on item type
     function renderItemRight(item) {
         const rightDiv = document.createElement('div');
         rightDiv.className = "item-right";
@@ -113,7 +175,7 @@
             const dotSpan = document.createElement('span');
             dotSpan.className = 'toggle-dot';
             dotSpan.style.backgroundColor = isChecked ? '#10b981' : '#ef4444';
-            dotSpan.style.boxShadow = isChecked ? '0 0 6px #10b981' : '0 0 3px #ef4444';
+            dotSpan.style.boxShadow = isChecked ? '0 0 5px #10b981' : '0 0 3px #ef4444';
             const textSpan = document.createElement('span');
             textSpan.className = 'toggle-text';
             textSpan.style.color = isChecked ? '#86efac' : '#f87171';
@@ -122,7 +184,7 @@
             rightDiv.appendChild(textSpan);
         }
         else if (item.type === 'scrollable') {
-            const valuesArr = item.values || ['Value 1', 'Value 2', 'Value 3'];
+            const valuesArr = item.values || ['Option 1', 'Option 2', 'Option 3'];
             let currentValIdx = (item.value !== undefined && item.value >= 0 && item.value < valuesArr.length) ? item.value : 0;
             const displayVal = valuesArr[currentValIdx] || '???';
             const badgeSpan = document.createElement('span');
@@ -138,7 +200,6 @@
             rightDiv.appendChild(badgeSpan);
         }
         else if (item.type === 'divider') {
-            // Dividers have no right indicator
             return null;
         }
         else {
@@ -171,8 +232,13 @@
         if (selectedIndex >= currentMenuItems.length) selectedIndex = currentMenuItems.length - 1;
         if (selectedIndex < 0 && currentMenuItems.length) selectedIndex = 0;
 
+        // Skip dividers for selection
+        while (currentMenuItems[selectedIndex] && currentMenuItems[selectedIndex].type === 'divider') {
+            selectedIndex = (selectedIndex + 1) % currentMenuItems.length;
+        }
+
         currentMenuItems.forEach((item, idx) => {
-            // Handle dividers specially
+            // Handle dividers
             if (item.type === 'divider') {
                 const divider = document.createElement('li');
                 divider.className = "menu-divider";
@@ -182,7 +248,8 @@
             }
 
             const li = document.createElement('li');
-            li.className = `menu-item ${idx === selectedIndex ? 'active' : ''}`;
+            const isActive = (idx === selectedIndex);
+            li.className = `menu-item ${isActive ? 'active' : ''}`;
 
             // Left label
             const leftSpan = document.createElement('span');
@@ -199,7 +266,7 @@
 
             // Hover selection
             li.addEventListener('mouseenter', () => {
-                if (selectedIndex !== idx) {
+                if (selectedIndex !== idx && item.type !== 'divider') {
                     const prevActive = menuListEl.querySelector('.menu-item.active');
                     if (prevActive) prevActive.classList.remove('active');
                     selectedIndex = idx;
@@ -211,7 +278,7 @@
 
             // Click action
             li.addEventListener('click', () => {
-                if (selectedIndex !== idx) {
+                if (selectedIndex !== idx && item.type !== 'divider') {
                     const prevActive = menuListEl.querySelector('.menu-item.active');
                     if (prevActive) prevActive.classList.remove('active');
                     selectedIndex = idx;
@@ -219,7 +286,9 @@
                     updateCounter();
                     scrollToActiveItem();
                 }
-                executeCurrentAction();
+                if (item.type !== 'divider') {
+                    executeAction(item);
+                }
             });
 
             menuListEl.appendChild(li);
@@ -229,12 +298,8 @@
         scrollToActiveItem();
     }
 
-    // Execute action for current selected item
-    function executeCurrentAction() {
-        if (!currentMenuItems.length) return;
-        const item = currentMenuItems[selectedIndex];
-        if (!item || item.type === 'divider') return;
-
+    // Execute action for an item
+    function executeAction(item) {
         if (item.type === 'checkbox') {
             item.checked = !item.checked;
             renderMenuItems();
@@ -242,6 +307,10 @@
                 label: item.label,
                 newState: item.checked
             });
+            console.log(`%c[${item.label}] ${item.checked ? 'ENABLED' : 'DISABLED'}`, `color: ${item.checked ? '#10b981' : '#ef4444'}; font-weight: bold;`);
+
+            // Show temporary notification for demo
+            showNotification(`${item.label}: ${item.checked ? 'ON' : 'OFF'}`);
         }
         else if (item.type === 'scrollable') {
             const valuesArr = item.values || [];
@@ -254,8 +323,8 @@
                     selectedValue: valuesArr[newIdx],
                     index: newIdx
                 });
-            } else {
-                emitToClient("selectItem", {});
+                console.log(`%c[${item.label}] Changed to: ${valuesArr[newIdx]}`, `color: #ffaa8a; font-weight: bold;`);
+                showNotification(`${item.label}: ${valuesArr[newIdx]}`);
             }
         }
         else if (item.type === 'slider') {
@@ -263,29 +332,61 @@
                 label: item.label,
                 currentValue: item.value
             });
+            console.log(`%c[${item.label}] Value: ${item.value}`, `color: #ffaa8a; font-weight: bold;`);
+            showNotification(`${item.label}: ${item.value}`);
         }
         else {
             emitToClient("selectItem", {});
+            console.log(`%c[${item.label}] EXECUTED`, `color: #ff3e3e; font-weight: bold;`);
+            showNotification(`Executed: ${item.label}`);
         }
     }
 
-    // Full render
-    function fullRender() {
-        renderCategoryTabs();
-        renderMenuItems();
+    // Show temporary notification (for demo)
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.background = '#ff3e3e';
+        notification.style.color = 'white';
+        notification.style.padding = '10px 20px';
+        notification.style.borderRadius = '8px';
+        notification.style.fontFamily = 'Orbitron, monospace';
+        notification.style.fontSize = '12px';
+        notification.style.zIndex = '9999';
+        notification.style.animation = 'fadeOut 2s ease forwards';
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
     }
+
+    // Add fadeOut animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateX(0); }
+            70% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(20px); }
+        }
+    `;
+    document.head.appendChild(style);
 
     // Navigation
     function navigateUp() {
         if (!currentMenuItems.length) return;
         let newIdx = selectedIndex - 1;
         if (newIdx < 0) newIdx = currentMenuItems.length - 1;
-        // Skip dividers if possible
-        while (newIdx >= 0 && newIdx < currentMenuItems.length && currentMenuItems[newIdx] && currentMenuItems[newIdx].type === 'divider') {
+        let attempts = 0;
+        while (currentMenuItems[newIdx] && currentMenuItems[newIdx].type === 'divider' && attempts < 50) {
             newIdx = newIdx - 1;
             if (newIdx < 0) newIdx = currentMenuItems.length - 1;
+            attempts++;
         }
-        if (newIdx !== selectedIndex) {
+        if (newIdx !== selectedIndex && currentMenuItems[newIdx] && currentMenuItems[newIdx].type !== 'divider') {
             selectedIndex = newIdx;
             renderMenuItems();
         }
@@ -295,12 +396,13 @@
         if (!currentMenuItems.length) return;
         let newIdx = selectedIndex + 1;
         if (newIdx >= currentMenuItems.length) newIdx = 0;
-        // Skip dividers if possible
-        while (newIdx >= 0 && newIdx < currentMenuItems.length && currentMenuItems[newIdx] && currentMenuItems[newIdx].type === 'divider') {
+        let attempts = 0;
+        while (currentMenuItems[newIdx] && currentMenuItems[newIdx].type === 'divider' && attempts < 50) {
             newIdx = newIdx + 1;
             if (newIdx >= currentMenuItems.length) newIdx = 0;
+            attempts++;
         }
-        if (newIdx !== selectedIndex) {
+        if (newIdx !== selectedIndex && currentMenuItems[newIdx] && currentMenuItems[newIdx].type !== 'divider') {
             selectedIndex = newIdx;
             renderMenuItems();
         }
@@ -324,16 +426,43 @@
 
     // Keyboard handler
     function onKeyDown(e) {
-        if (document.body.style.display !== 'block') return;
-        const key = e.key;
-        const navKeys = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Backspace', 'e', 'E', 'q', 'Q'];
-        if (navKeys.includes(key)) e.preventDefault();
+        // Handle key selector first
+        if (isSelectingKey) {
+            e.preventDefault();
+            e.stopPropagation();
 
-        switch (key) {
+            if (e.key === 'Escape') {
+                hideKeySelector();
+                return;
+            }
+
+            const displayName = getKeyDisplayName(e.key);
+            keyDisplay.innerHTML = `<span class="key-placeholder">${displayName}</span>`;
+            keyDisplay.classList.add('has-key');
+
+            setTimeout(() => {
+                onKeySelected(e.key);
+            }, 150);
+            return;
+        }
+
+        const navKeys = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Backspace', 'e', 'E', 'q', 'Q'];
+        if (navKeys.includes(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        switch (e.key) {
             case 'ArrowUp': navigateUp(); break;
             case 'ArrowDown': navigateDown(); break;
-            case 'Enter': executeCurrentAction(); break;
-            case 'Escape': case 'Backspace': closeMenu(); break;
+            case 'Enter':
+                if (currentMenuItems[selectedIndex]) {
+                    executeAction(currentMenuItems[selectedIndex]);
+                }
+                break;
+            case 'Escape': case 'Backspace':
+                console.log("Menu closed");
+                break;
             case 'e': case 'E': switchCategory('prev'); break;
             case 'q': case 'Q': switchCategory('next'); break;
             default: break;
@@ -345,37 +474,32 @@
         const data = event.data;
         if (!data) return;
 
-        // Show/Hide UI (compatible with your Lua's showUI action)
         if (data.type === 'ui' || data.action === 'showUI') {
             const visible = (data.type === 'ui') ? data.status : data.visible;
             if (visible === true) {
-                document.body.style.display = 'block';
                 if (data.elements) currentMenuItems = data.elements;
                 if (data.categories) currentCategories = data.categories;
                 if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
                 if (data.selectedIndex !== undefined) selectedIndex = data.selectedIndex;
                 if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
                 if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
-                fullRender();
-            } else {
-                document.body.style.display = 'none';
+                renderCategoryTabs();
+                renderMenuItems();
             }
             return;
         }
 
-        // Update Elements
         if (data.action === 'updateElements') {
             if (data.elements) currentMenuItems = data.elements;
             if (data.categories) currentCategories = data.categories;
             if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
             if (data.selectedIndex !== undefined) selectedIndex = data.selectedIndex;
             if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
-            if (data.path) console.log("Menu path:", data.path);
             if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
-            fullRender();
+            renderCategoryTabs();
+            renderMenuItems();
         }
 
-        // Sync Index
         if (data.action === 'syncIndex') {
             if (data.index !== undefined && currentMenuItems.length && data.index < currentMenuItems.length) {
                 selectedIndex = data.index;
@@ -383,7 +507,6 @@
             }
         }
 
-        // Keydown (for initial selection sync)
         if (data.action === 'keydown') {
             if (data.index !== undefined && currentMenuItems.length && data.index < currentMenuItems.length) {
                 selectedIndex = data.index;
@@ -391,22 +514,24 @@
             }
         }
 
-        // Update Auth Footer
         if (data.action === 'updateAuthFooter') {
             if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
         }
 
-        // Execute JavaScript (for menu positioning, etc.)
-        if (data.action === 'executeJS' && data.code) {
-            try {
-                eval(data.code);
-            } catch (e) { console.log("ExecuteJS error:", e); }
+        if (data.action === 'showKeySelector') {
+            showKeySelector(function (selectedKey) {
+                emitToClient("keySelected", { key: selectedKey });
+            });
         }
     });
 
     // Attach keyboard listener
     window.addEventListener('keydown', onKeyDown);
 
-    // Hidden by default until NUI activation
-    document.body.style.display = "none";
+    // Initial render
+    renderCategoryTabs();
+    renderMenuItems();
+
+    console.log("%c SHINIGAMI ESSE MENU LOADED ", "color: #ff3e3e; font-size: 16px; font-weight: bold;");
+    console.log("%cUse Arrow Keys to navigate | Enter to select | Q/E for categories", "color: #ffaa8a; font-size: 12px;");
 })();
