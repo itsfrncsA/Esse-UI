@@ -461,7 +461,16 @@
                 }
                 break;
             case 'Escape': case 'Backspace':
-                console.log("Menu closed");
+                if (window.GetParentResourceName) {
+                    fetch(`https://${getParentResource()}/closeNUI`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                        body: JSON.stringify({})
+                    }).catch(() => {});
+                } else {
+                    console.log("[FiveM Mock] Close NUI");
+                    document.getElementById("mainMenu").style.display = "none";
+                }
                 break;
             case 'e': case 'E': switchCategory('prev'); break;
             case 'q': case 'Q': switchCategory('next'); break;
@@ -474,17 +483,46 @@
         const data = event.data;
         if (!data) return;
 
-        if (data.type === 'ui' || data.action === 'showUI') {
-            const visible = (data.type === 'ui') ? data.status : data.visible;
-            if (visible === true) {
+        const mainMenu = document.getElementById("mainMenu");
+
+        // Handle showUI action
+        if (data.action === 'showUI') {
+            if (data.visible === true) {
+                mainMenu.style.display = "flex";
                 if (data.elements) currentMenuItems = data.elements;
                 if (data.categories) currentCategories = data.categories;
                 if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
-                if (data.selectedIndex !== undefined) selectedIndex = data.selectedIndex;
+                
+                const targetIndex = data.index !== undefined ? data.index : data.selectedIndex;
+                if (targetIndex !== undefined) selectedIndex = targetIndex;
+                
                 if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
                 if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
                 renderCategoryTabs();
                 renderMenuItems();
+            } else {
+                mainMenu.style.display = "none";
+            }
+            return;
+        }
+
+        // Handle legacy type === ui message
+        if (data.type === 'ui') {
+            if (data.status === true) {
+                mainMenu.style.display = "flex";
+                if (data.elements) currentMenuItems = data.elements;
+                if (data.categories) currentCategories = data.categories;
+                if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
+                
+                const targetIndex = data.index !== undefined ? data.index : data.selectedIndex;
+                if (targetIndex !== undefined) selectedIndex = targetIndex;
+                
+                if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+                if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
+                renderCategoryTabs();
+                renderMenuItems();
+            } else {
+                mainMenu.style.display = "none";
             }
             return;
         }
@@ -493,35 +531,36 @@
             if (data.elements) currentMenuItems = data.elements;
             if (data.categories) currentCategories = data.categories;
             if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
-            if (data.selectedIndex !== undefined) selectedIndex = data.selectedIndex;
+            
+            const targetIndex = data.index !== undefined ? data.index : data.selectedIndex;
+            if (targetIndex !== undefined) selectedIndex = targetIndex;
+            
             if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
             if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
             renderCategoryTabs();
             renderMenuItems();
+            return;
         }
 
-        if (data.action === 'syncIndex') {
-            if (data.index !== undefined && currentMenuItems.length && data.index < currentMenuItems.length) {
-                selectedIndex = data.index;
+        if (data.action === 'syncIndex' || data.action === 'keydown') {
+            const targetIndex = data.index !== undefined ? data.index : data.selectedIndex;
+            if (targetIndex !== undefined && currentMenuItems.length && targetIndex < currentMenuItems.length) {
+                selectedIndex = targetIndex;
                 renderMenuItems();
             }
-        }
-
-        if (data.action === 'keydown') {
-            if (data.index !== undefined && currentMenuItems.length && data.index < currentMenuItems.length) {
-                selectedIndex = data.index;
-                renderMenuItems();
-            }
+            return;
         }
 
         if (data.action === 'updateAuthFooter') {
             if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+            return;
         }
 
         if (data.action === 'showKeySelector') {
             showKeySelector(function (selectedKey) {
                 emitToClient("keySelected", { key: selectedKey });
             });
+            return;
         }
     });
 
@@ -531,6 +570,12 @@
     // Initial render
     renderCategoryTabs();
     renderMenuItems();
+
+    // Browser Mock Mode Fallback Styling & Visibility
+    if (!window.GetParentResourceName) {
+        document.body.style.background = "radial-gradient(circle at 30% 20%, #0a0a0f 0%, #050508 100%)";
+        document.getElementById("mainMenu").style.display = "flex";
+    }
 
     console.log("%c SHINIGAMI ESSE MENU LOADED ", "color: #ff3e3e; font-size: 16px; font-weight: bold;");
     console.log("%cUse Arrow Keys to navigate | Enter to select | Q/E for categories", "color: #ffaa8a; font-size: 12px;");
