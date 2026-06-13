@@ -1,5 +1,5 @@
 /* ==================== SHINIGAMI ESSE - PARANOIA MENU ==================== */
-/* Styled to match Paranoia DUI overlay (transparent, clean, compact) */
+/* FIXED: Transparent background + BRIGHT RED highlight */
 
 * {
     margin: 0;
@@ -53,9 +53,10 @@ body {
     width: 340px;
     max-width: 90vw;
     pointer-events: auto;
-    background: transparent;
-    border-radius: 0;
-    border: none;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -67,6 +68,7 @@ body {
         opacity: 0;
         transform: translateY(6px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -77,7 +79,6 @@ body {
 .menu-banner {
     width: 100%;
     overflow: hidden;
-    border-radius: 6px 6px 0 0;
     background: rgba(0, 0, 0, 0.6);
 }
 
@@ -94,7 +95,7 @@ body {
     padding: 14px 16px 10px 16px;
     text-align: center;
     background: rgba(0, 0, 0, 0.55);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .menu-title {
@@ -111,9 +112,9 @@ body {
     font-size: 9px;
     font-weight: 700;
     color: #ff4444;
-    letter-spacing: 5px;
+    letter-spacing: 8px;
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 8px;
 }
 
 /* ==================== CATEGORY TABS ==================== */
@@ -150,10 +151,13 @@ body {
     color: #ffffff;
 }
 
+/* FIXED: Active category tab - BRIGHT RED */
 .category-tab.active {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: #ff3e3e !important;
+    color: #ffffff !important;
+    border-color: #ff7777 !important;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 8px rgba(255, 62, 62, 0.5);
 }
 
 /* ==================== MENU ITEMS ==================== */
@@ -205,11 +209,14 @@ body {
     color: #ffffff;
 }
 
-/* ACTIVE MENU ITEM - Solid red highlight like the reference */
+/* FIXED: ACTIVE MENU ITEM - SUPER BRIGHT RED HIGHLIGHT */
 .menu-item.active {
-    background: rgba(200, 50, 20, 0.85) !important;
+    background: #ff3e3e !important;
     color: #ffffff !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 0 12px rgba(255, 62, 62, 0.6) !important;
+    border-left: 3px solid #ffffff !important;
 }
 
 .menu-item.active span {
@@ -230,6 +237,7 @@ body {
 
 .menu-item.active .indicator-arrow {
     color: #ffffff !important;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
 .toggle-dot {
@@ -243,6 +251,10 @@ body {
 .toggle-text {
     font-size: 10px;
     font-weight: 700;
+}
+
+.menu-item.active .toggle-text {
+    color: #ffffff !important;
 }
 
 .scrollable-badge {
@@ -298,12 +310,12 @@ body {
 }
 
 .footer-credit {
-    color: #bbbbbb;
+    color: #ff8888;
     font-weight: 500;
 }
 
 .footer-counter {
-    color: #bbbbbb;
+    color: #ff8888;
     font-weight: 600;
 }
 
@@ -314,7 +326,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     display: none;
     justify-content: center;
     align-items: center;
@@ -325,7 +337,7 @@ body {
     width: 380px;
     background: rgba(15, 15, 20, 0.95);
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 62, 62, 0.3);
     overflow: hidden;
     animation: popIn 0.15s ease-out;
 }
@@ -333,7 +345,7 @@ body {
 .keyboard-header {
     padding: 16px 16px 10px;
     text-align: center;
-    background: rgba(200, 50, 20, 0.15);
+    background: rgba(255, 62, 62, 0.15);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -364,7 +376,7 @@ body {
     padding: 10px 20px;
     background: rgba(0, 0, 0, 0.5);
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 62, 62, 0.3);
     min-width: 100px;
     display: inline-block;
     word-break: break-all;
@@ -380,7 +392,9 @@ body {
 }
 
 @keyframes blink {
-    50% { opacity: 0; }
+    50% {
+        opacity: 0;
+    }
 }
 
 .keyboard-footer {
@@ -400,7 +414,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     display: none;
     justify-content: center;
     align-items: center;
@@ -411,7 +425,7 @@ body {
     width: 320px;
     background: rgba(15, 15, 20, 0.95);
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 62, 62, 0.3);
     overflow: hidden;
     animation: popIn 0.15s ease-out;
 }
@@ -421,6 +435,7 @@ body {
         opacity: 0;
         transform: scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -430,7 +445,7 @@ body {
 .key-selector-header {
     padding: 18px 16px 12px;
     text-align: center;
-    background: rgba(200, 50, 20, 0.15);
+    background: rgba(255, 62, 62, 0.15);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -467,7 +482,7 @@ body {
     padding: 16px 32px;
     background: rgba(0, 0, 0, 0.4);
     border-radius: 10px;
-    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border: 2px dashed rgba(255, 62, 62, 0.3);
     transition: all 0.1s ease;
 }
 
@@ -475,7 +490,7 @@ body {
     color: #ff4444;
     border-color: #ff4444;
     border-style: solid;
-    background: rgba(200, 50, 20, 0.15);
+    background: rgba(255, 62, 62, 0.15);
 }
 
 .key-selector-footer {
@@ -535,13 +550,27 @@ body {
 }
 
 @keyframes notifSlideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @keyframes notifFadeOut {
-    from { opacity: 1; transform: translateX(0); }
-    to { opacity: 0; transform: translateX(20px); }
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
 }
 
 /* ==================== RESPONSIVE ==================== */

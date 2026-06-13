@@ -1,4 +1,4 @@
-// ==================== SHINIGAMI ESSE - PARANOIA MENU ====================
+// ==================== SHINIGAMI ESSE - MENU ====================
 (function () {
     // Demo Data (only used when testing in browser)
     const demoCategories = [
@@ -187,6 +187,11 @@
             });
             categoryTabsContainer.appendChild(tab);
         });
+
+        const activeTab = categoryTabsContainer.querySelector('.category-tab.active');
+        if (activeTab) {
+            activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
     }
 
     // ==================== RENDER ITEM RIGHT SIDE ====================
@@ -448,15 +453,15 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
                         body: JSON.stringify({})
-                    }).catch(() => {});
+                    }).catch(() => { });
                 }
                 // For browser testing, just hide
                 if (!isInFiveM()) {
                     mainMenu.style.display = "none";
                 }
                 break;
-            case 'e': case 'E': switchCategory('prev'); break;
-            case 'q': case 'Q': switchCategory('next'); break;
+            case 'q': case 'Q': switchCategory('prev'); break;
+            case 'e': case 'E': switchCategory('next'); break;
             default: break;
         }
     }
@@ -475,7 +480,7 @@
                 if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
                 const idx = data.index !== undefined ? data.index : data.selectedIndex;
                 if (idx !== undefined) selectedIndex = idx;
-                if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+                if (data.username) footerCreditSpan.innerText = ` | ${data.username}`;
                 if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
                 renderCategoryTabs();
                 renderMenuItems();
@@ -494,7 +499,7 @@
                 if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
                 const idx = data.index !== undefined ? data.index : data.selectedIndex;
                 if (idx !== undefined) selectedIndex = idx;
-                if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+                if (data.username) footerCreditSpan.innerText = ` | ${data.username}`;
                 if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
                 renderCategoryTabs();
                 renderMenuItems();
@@ -511,7 +516,7 @@
             if (data.categoryIndex !== undefined) currentCategoryIndex = data.categoryIndex;
             const idx = data.index !== undefined ? data.index : data.selectedIndex;
             if (idx !== undefined) selectedIndex = idx;
-            if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+            if (data.username) footerCreditSpan.innerText = ` | ${data.username}`;
             if (currentMenuItems.length && selectedIndex >= currentMenuItems.length) selectedIndex = 0;
             renderCategoryTabs();
             renderMenuItems();
@@ -562,7 +567,7 @@
 
         // ---- updateAuthFooter: Update footer username ----
         if (data.action === 'updateAuthFooter') {
-            if (data.username) footerCreditSpan.innerText = `/cracked by | ${data.username}`;
+            if (data.username) footerCreditSpan.innerText = ` | ${data.username}`;
             return;
         }
 
