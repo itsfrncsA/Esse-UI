@@ -4,12 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Shinigami Esse ·Menu</title>
+    <title>Shinigami Esse Menu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Orbitron:wght@400;500;700;900&display=swap"
         rel="stylesheet">
+
+    <!-- CRITICAL: Inline transparency - cannot be cached separately -->
+    <style>
+        html, body {
+            background: transparent !important;
+            background-color: transparent !important;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -17,6 +28,11 @@
     <!-- Main Menu -->
     <div class="nui-wrapper" id="mainMenu">
         <div class="menu-container">
+            <!-- Banner (optional, controlled by Lua updateBanner) -->
+            <div class="menu-banner" id="menuBanner" style="display:none;">
+                <img id="bannerImage" src="" alt="">
+            </div>
+
             <div class="menu-header">
                 <div class="menu-title">SHINIGAMI</div>
                 <div class="menu-subtitle">ESSE</div>
@@ -31,6 +47,22 @@
             <div class="menu-footer">
                 <span class="footer-credit" id="footerCredit">/Made By | Frncs</span>
                 <span class="footer-counter" id="itemCounter">1/8</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Input Overlay -->
+    <div class="keyboard-overlay" id="keyboardOverlay">
+        <div class="keyboard-container">
+            <div class="keyboard-header">
+                <div class="keyboard-title" id="keyboardTitle">INPUT</div>
+            </div>
+            <div class="keyboard-display">
+                <span class="keyboard-value" id="keyboardValue"></span>
+                <span class="keyboard-cursor">|</span>
+            </div>
+            <div class="keyboard-footer">
+                <span>ENTER to confirm &bull; ESC to cancel</span>
             </div>
         </div>
     </div>
@@ -50,6 +82,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
 
     <script src="script.js"></script>
 </body>
